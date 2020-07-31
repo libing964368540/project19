@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>考核进度展示</title>
+</head>
+<!--<link rel="stylesheet" href="css/layui.css">-->
+<link rel="stylesheet" href="css/index.css">
+<link rel="stylesheet" href="font/iconfont.css">
+<link rel="stylesheet" href="css/icon.css">
+<body>
+     <div id="app">
+           <ul class="content flex">
+               <li class="list" v-for="(item,index) in list_J" >
+                   <!--考核人员信息-->
+                   <div class="headwrap flex">
+                        <div class="head flex">
+                            <div class="nameWrap flex" style="position: relative">
+                                <span v-text="item.PoliceName"style="margin-right: 10px"></span>
+                                <span v-show="!state" v-text="item.PoliceCode" style="margin-right: 10px"></span>
+                                  <p v-text="item.PoliceUnit"></p>
+
+                            </div>
+                        </div>
+                       <!--考核时间进度-->
+                   </div>
+                   <!--被考核考题-->
+                   <div class="limitwrap flex" v-show="state">
+                        <div :class="{limitImg:true,translate:indexs==animantionIndex,cell:animantionIndex==101&&items.IsSelect>0}"  v-for="(items,indexs) in item.CriminalList" v-show="state&&loginStateArr[index].loginState">
+                            <div class="CriminalHead">
+                                  <img :src="urls+items.CriminalHead" alt="">
+                            </div>
+
+                            <span v-text="items.CriminalCode" class="CriminalCode"></span>
+                        </div>
+                        <p v-show="!loginStateArr[index].loginState" :class="{tips:true,active:loginStateArr[index].text!='登录后生成数据'}" v-text="loginStateArr[index].text">登录后生成数据</p>
+                   </div>
+                   <!--被选中的考题-->
+                   <div class="limitwrap chooseWrap flex" v-show="!state&&loginStateArr[index].loginState" style="position: relative">
+                       <div class="flex" style="width: 100%;padding-top: 10px;padding-left: 25px">
+                           <div class="Score" v-text="'得分：'+timeArr[index].TotalScore+'分'"></div>
+                           <div class="userTime" v-text="'用时：'+timeArr[index].time_1"></div>
+                       </div>
+                           <div  v-for="(itemC,indexC) in item.chooseArr" class="flex flex-x-end flex-y-center chooseList" style="width: 45%">
+                               <span class="iconfont ballon  point" v-show="indexC==timeArr[index].indexS">&#xe637;</span>
+                               <div :class="{choose:true,success:itemC.Score==10,fail:itemC.IsAnswer&&itemC.Score<10}" @click="msg(itemC.PoliceCode,itemC.CriminalId)" >
+                                   <img v-lazy="getPhoto(itemC)" alt="" @load="successLoadImg">
+                                   <span  class="chooseNumber" v-text="itemC.CriminalCode"></span>
+                               </div>
+                               <span class="record" v-text="'得分：'+itemC.Score+'分'"></span>
+                           </div>
+                           <div class="maskState" v-show="maskState[index].state" @click="delMaskState(index)">
+                                   <img src="img/state.png" alt="">
+                           </div>
+
+                   </div>
+                   <!--未登录状态的提示-->
+               </li>
+           </ul>
+           <audio ref="mmAudio1" :src="src1"></audio>
+           <audio ref="mmAudio" :src="src"></audio>
+           <span class="btn" id="resultScore" @click="result">成绩</span>
+     </div>
+
+</body>
+<script src="js/jquery-1.12.4.min.js"></script>
+<script src="layer/layer.js"></script>
+<script src="js/mask.js"></script>
+<script src="js/vue.js"></script>
+<script src="utils/vue-lazyload.js"></script>
+<script src="api/req.js"></script>
+<script>
+    Vue.use(VueLazyload, {
+        preLoad: 1.3,
+        error: '../../img/timg.jpeg',
+        attempt: 1
+    });
+    Vue.prototype.successLoadImg = function(event) {
+        var imgParentNode = event.target.parentNode;
+        imgParentNode.style.background = "#F3F5F8";
+    };
+       var app = new Vue({
+           el:"#app",
+           data:{
+               list_J:[
+                   {PoliceName:'未登录',PoliceUnit:'',PoliceCode:'',CriminalList:[],chooseArr:[]},
+                   {PoliceName:'未登录',PoliceUnit:'',PoliceCode:'',CriminalList:[],chooseArr:[]},
+                   {PoliceName:'未登录',PoliceUnit:'',PoliceCode:'',CriminalList:[],chooseArr:[]}
+               ],
+               state:true,
+               loginState:false,
+               loginStateArr:[{loginState:false,text:'登录后生成数据'},{loginState:false,text:'登录后生成数据'},{loginState:false,text:'登录后生成数据'}],
+               taskid:'', //获取任务id
+               timeArr:[{TotalScore:0,
+                   time_1:'00:00:00',
+                   indexS:0,
+                   screenEndTime:0
+               },{
+                   TotalScore:0,
+                   time_1:'00:00:00',
+                   indexS:0,
+                   screenEndTime:0
+               },{
+                   TotalScore:0,
+                   time_1:'00:00:00',
+                   indexS:0,
+                   screenEndTime:0
+               }], //实时监测变化
+               TaskState:0,//总的任务变化
+               CountTimeFlag:false,//倒计时监测
+               src:'utils/mp3/end.mp3',
+               src1:'utils/mp3/start.mp3',
+               audioStart_1:true,//登录音效开关
+               audioStart_2:true,
+               audioStart_3:true,
+               audioEnd_1:true,//答题结束音效开关
+               audioEnd_2:true,
+               audioEnd_3:true,
+               maskState:[{'state':false},{'state':false},{'state':false}],
+               //动画计时器
+               animantionIndex:-1
+           },
+           mounted:function () {
+               var that = this;
+                   this.getTaskState();
+           },
+           methods: {
+               //获取任务状态控制整个答题的进度
+               getTaskState: function () {
+                   var that = this;
+                   var params = {};
+                   $.axse(urls + '/ApiInterface/TaskInfo', params, function (result) {
+                       var data = result.data[0]
+                       that.TaskState = data.TaskState
+                       if (data.TaskState == 0) {
+                           that.state = true;          //是否展示选中的数据和是否开始
+                           that.animantionIndex=-1;    //记录随机筛选的过程
+                       }
+                       if (that.taskid != data.TaskId||that.state) {
+                           that.taskid = data.TaskId//获取新任务的id
+                           that.CountTimeFlag = false;
+                           that.timeArr = [{
+                               TotalScore: 0,
+                               time_1: '00:00:00',
+                               indexS: 0,
+                               screenEndTime:0
+                           }, {
+                               TotalScore: 0,
+                               time_1: '00:00:00',
+                               indexS: 0,
+                               screenEndTime:0
+                           }, {
+                               TotalScore: 0,
+                               time_1: '00:00:00',
+                               indexS: 0,
+                               screenEndTime:0
+                           }]
+                           that.maskState=[{'state':false},{'state':false},{'state':false}]
+                           that.getPolisInfo();
+                       }
+                       //选中  和   开始
+                       if (data.TaskState == 1) {//选题
+                           if (that.state&&that.animantionIndex==-1) {
+//
+                               var animantionTime=setInterval(function () {
+                                   that.animantionIndex+=1;
+                                   if(that.animantionIndex==101){
+                                      clearInterval(animantionTime);
+                                   }
+                               },60)
+                           }
+                       }
+                       if (data.TaskState == 2) {//开始
+                           that.chooseArr();
+                           that.getTaskAnswersPolisInfo();
+                           if (that.state || !that.CountTimeFlag) {
+                               that.state = false;
+                               that.CountDown(data);
+                           }
+                           that.CountTimeFlag = true;
+                       }
+                       //主持人未开始时候继续轮询任务开始结果
+                       setTimeout(function () {
+                           that.getTaskState();
+                       }, 1500)
+                   }, function () {
+                       setTimeout(function () {
+                           that.getTaskState();
+                       }, 1500)
+                   })
+               },
+               //获取在线狱警的信息
+               getPoliceOnLine: function () {
+                   var that = this;
+                   var params = {
+                       taskid: this.taskid
+                   }
+                   $.axse(urls + '/ApiInterface/PoliceOnLine', params, function (result) {
+                       console.log(result);
+                       if (result.data) {
+                           var list = result.data;
+                           if (list.length > 0) {
+                               if (list.length > 3) {
+                                   that.list_J = list.slice(2);
+                               } else {
+                                   that.list_J = list;
+                               }
+                               that.loginState = true;
+                           }
+                       }
+                   }, function () {
+
+                   })
+               },
+               //登陆的狱警信息，狱警管理罪犯信息，选中答题的罪犯
+               getPolisInfo: function () {
+                   var that = this;
+                   var params = {
+                       taskid: this.taskid
+                   }
+                   $.axse(urls + '/ApiInterface/AnswersPolisInfo', params, function (result) {
+                       var list = result.data;
+                       if (list.length > 0) {
+                               list.forEach(function (item) {
+                                    if(item.DeviceId==1){//设备1
+                                      that.list_J[0]=item;
+                                      if(that.audioStart_1){that.paly1();that.audioStart_1=false;that.audioEnd_1=true;}
+                                        that.loginStateArr[0].text="数据初始化中"
+                                        setTimeout(function () {
+                                            that.loginStateArr[0].loginState=true;
+                                        },1000)
+                                    }
+                                   if(item.DeviceId==2){//设备二
+                                       that.list_J[1]=item;
+                                       if(that.audioStart_2){that.paly1();that.audioStart_2=false;that.audioEnd_2=true;}
+                                       that.loginStateArr[1].text="数据初始化中"
+                                       setTimeout(function () {
+                                           that.loginStateArr[1].loginState=true;
+                                       },3000)
+                                   }
+                                   if(item.DeviceId==3){//设备三
+                                       that.list_J[3]=item;
+                                       if(that.audioStart_3){that.paly1();that.audioStart_3=false;that.audioEnd_3=true;}
+                                       that.loginStateArr[2].text="数据初始化中"
+                                       setTimeout(function () {
+                                           that.loginStateArr[2].loginState=true;
+                                       },1000)
+                                       that.fillChooseArr(that.list_J);
+                                   }
+                               })
+
+                       }
+                   }, function () {
+                       that.list_J = [
+                           {PoliceName: '未登录', PoliceUnit: '', PoliceCode: '', CriminalList: [], chooseArr: []},
+                           {PoliceName: '未登录', PoliceUnit: '', PoliceCode: '', CriminalList: [], chooseArr: []},
+                           {PoliceName: '未登录', PoliceUnit: '', PoliceCode: '', CriminalList: [], chooseArr: []}
+                       ]
+                           that.state = true
+//                           that.loginState = false
+                           that.loginStateArr=[
+                                  {loginState:false,text:'登录后生成数据'},
+                                  {loginState:false,text:'登录后生成数据'},
+                                  {loginState:false,text:'登录后生成数据'}]
+                           that.taskid = ''//获取任务id
+                       that.CountTimeFlag = false;
+                   })
+               },
+               //10、大屏幕展示：狱警答题情况
+               getTaskAnswersPolisInfo: function () {
+                   var that = this;
+                   var params = {
+                       taskid: this.taskid
+                   }
+                   $.axse(urls + '/ApiInterface/TaskAnswersPolisInfo', params, function (result) {
+                       var list = result.data;
+                       for (var j = 0; j < list.length; j++) {
+                           if(list[j].DeviceId==1){
+                               that.list_J[0].chooseArr = list[j].CriminalList
+                           }
+                           if(list[j].DeviceId==2){
+                               that.list_J[1].chooseArr = list[j].CriminalList
+                           }
+                           if(list[j].DeviceId==3){
+                               that.list_J[2].chooseArr = list[j].CriminalList
+                           }
+//                           that.list_J[j].chooseArr = list[j].CriminalList  //考生一答题情况
+//                           that.list_J[1].chooseArr= list[1].CriminalList  //考生二答题情况
+//                           that.list_J[2].chooseArr= list[2].CriminalList  //考生三答题情况
+                       }
+//                       console.log(that.list_J)
+                       var Score_1 = 0, Score_2 = 0, Score_3 = 0;
+                       var indexS_1 = 0, indexS_2 = 0, indexS_3 = 0;
+
+                       for (var i = 0; i < that.list_J[0].chooseArr.length; i++) {
+                           if (that.list_J[0].chooseArr[i]['IsAnswer']) {
+                               indexS_1 += 1;
+                               Score_1 += that.list_J[0].chooseArr[i].Score
+                           }
+                           if (that.list_J[1].chooseArr.length > 0) {
+                               if (that.list_J[1].chooseArr[i]['IsAnswer']) {
+                                   indexS_2 += 1;
+                                   Score_2 += that.list_J[1].chooseArr[i].Score
+                               }
+                           }
+                           if (that.list_J[2].chooseArr.length > 0 ) {
+                               if (that.list_J[2].chooseArr[i]['IsAnswer']) {
+                                   indexS_3 += 1;
+                                   Score_3 += that.list_J[2].chooseArr[i].Score
+                               }
+                           }
+
+                       }
+                       console.log(indexS_1);
+                       that.timeArr[0].TotalScore = Score_1
+                       that.timeArr[0].indexS = indexS_1
+                       that.timeArr[1].TotalScore = Score_2
+                       that.timeArr[1].indexS = indexS_2
+                       that.timeArr[2].TotalScore = Score_3
+                       that.timeArr[2].indexS = indexS_3
+                   }, function () {
+
+                   })
+               },
+               //填充被选中的答题数据
+               fillChooseArr: function (list) {
+                   var that = this;
+                   for (var i = 0; i < list.length; i++) {
+                       list[i].chooseArr = list[i].CriminalList.filter(function (item) {
+                           if (item.IsSelect == 1) {
+                               if (!item.Score) {
+                                   item.Score = 0;//填充得分
+                               }
+                                //填充遮罩
+
+                               return item;
+                           }
+                       })
+                   }
+                   console.log(list);
+
+               },
+               //获取选题
+               getChoose: function () {
+                   var that = this;
+               },
+               //获取开始状态
+               getStart: function () {
+//                   mask.NoTip('结束')
+               },
+               //结束状态
+               init: function () {
+
+               },
+               chooseArr: function () {
+                   var that = this;
+//                   mask.YesTip('开始答题')
+                   that.state = false;
+
+               },
+               //倒计时  1.全局任务的状态判断    2.时间到的状态判断   3到达考试任务结束的判断
+               CountDown: function (data) {
+                   var that = this;
+                   var sys_second = 0;
+                   var _TaskEnd = new Date(data.TaskEnd.replace(/-/g, "/")).getTime();
+                   var _TaskBegin = new Date(data.TaskBegin.replace(/-/g, "/")).getTime();
+                   var time_1 = setInterval(function () {
+                       var NowTime = new Date().getTime();
+                       sys_second = NowTime - _TaskBegin;
+                       sys_second = sys_second < 0 ? 0 : sys_second;
+//                            sys_second += 10;
+                       var day = Math.floor((sys_second / 1000 / 3600) / 24);
+                       var hour = Math.floor((sys_second / 1000 / 3600) % 24);
+                       var minute = Math.floor((sys_second / 1000 / 60) % 60);
+                       var second = Math.floor(sys_second / 1000 % 60);
+                       var haomiao = Math.floor(sys_second % 1000 / 10);
+                       minute = minute >= 10 ? minute : '0' + minute
+                       second = second >= 10 ? second : '0' + second
+                       haomiao = haomiao >= 10 ? haomiao : '0' + haomiao
+                       var arr = [minute, second, haomiao]
+
+                       if (NowTime >= _TaskEnd) {
+                           clearInterval(time_1);
+//                           that.AnchorTaskFinish();
+                           arr = ['20', '00', '00'];
+                       }
+                       //考核人员3号
+                       if (that.timeArr[0].indexS < 10) {
+                           that.timeArr[0].time_1 = arr.join(':')
+                       }else{
+                           if(that.audioEnd_1){
+                               that.getUserTime(that.list_J[0].PoliceCode,0);
+                               that.timeArr[0].screenEndTime = new Date().getTime();
+                           }else{//3秒之后删除答题完成遮罩
+                               var nowTime = new Date().getTime()
+                               if(nowTime-that.timeArr[0].screenEndTime>=3000){
+                                   that.maskState[0].state=false;
+                               }
+                           }
+                       }
+                       if (that.timeArr[1].indexS < 10) {
+                           that.timeArr[1].time_1 = arr.join(':')
+                       }else{
+                           if(that.audioEnd_2) {
+                               that.getUserTime(that.list_J[1].PoliceCode,1);
+                               that.timeArr[1].screenEndTime = new Date().getTime();
+                           }else {//3秒之后删除答题完成遮罩
+                               var nowTime = new Date().getTime()
+                               if(nowTime-that.timeArr[1].screenEndTime>=3000){
+                                   that.maskState[1].state=false;
+                               }
+                           }
+                       }
+                       if (that.timeArr[2].indexS < 10) {
+                           that.timeArr[2].time_1 = arr.join(':')
+                       }else{
+                           if(that.audioEnd_3) {
+                               that.getUserTime(that.list_J[2].PoliceCode,2);
+                               that.timeArr[2].screenEndTime = new Date().getTime();
+                           }else{//3秒之后删除答题完成遮罩
+                               var nowTime = new Date().getTime()
+                               if(nowTime-that.timeArr[2].screenEndTime>=3000){
+                                   that.maskState[2].state=false;
+                               }
+                           }
+                       }
+                       if(that.timeArr[0].indexS==10){if(that.audioEnd_1){that.paly();that.audioEnd_1=false;that.audioStart_1=true;that.maskState[0].state=true;}}
+                       console.log(that.timeArr[0].indexS)
+                       if(that.timeArr[1].indexS==10){if(that.audioEnd_2){that.paly();that.audioEnd_2=false;that.audioStart_2=true;that.maskState[1].state=true}}
+                      if(that.timeArr[2].indexS==10){if(that.audioEnd_3){that.paly();that.audioEnd_3=false;that.audioStart_3=true;that.maskState[2].state=true}}
+                       if (that.TaskState == 0) {
+                           clearInterval(time_1)
+                           that.CountTimeFlag = false;
+                           that.timeArr = [{
+                               TotalScore: 0,
+                               time_1: '00:00:00',
+                               indexS: 0,
+                               screenEndTime:0
+                           }, {
+                               TotalScore: 0,
+                               time_1: '00:00:00',
+                               indexS: 0,
+                               screenEndTime:0
+                           }, {
+                               TotalScore: 0,
+                               time_1: '00:00:00',
+                               indexS: 0,
+                               screenEndTime:0
+                           }]
+                       }
+                   }, 10)
+               },
+               //14、狱警单项答题情况查看
+               msg: function (policecode, criminalid) {
+                   var params = {
+                       taskid: this.taskid,//任务id
+                       policecode: policecode,//狱警警号
+                       criminalid: criminalid//罪犯id
+                   }
+                   $.axse(urls + '/ApiInterface/TaskCriminalAnswer', params, function (result) {
+                       var data = result.data;
+                       console.log(data);
+                       mask.look(data)
+                   }, function () {
+
+                   })
+               },
+               //当考试时间已经到了的时候调用任务结束接口
+               AnchorTaskFinish: function () {
+                   var that=this;
+                   var params = {
+                       taskid: this.taskid
+                   }
+                   $.axse(urls + '/ApiInterface/AnchorTaskFinish', params, function (result) {
+                       that.paly();
+                       mask.YesTip('答题结束')
+                   })
+               },
+               //获取头像
+               getPhoto: function (item) {
+                   return urls + item.CriminalHead;
+               },
+               paly() {
+                   this.$nextTick(() => this.$refs.mmAudio.play()) // 当前播放歌曲
+               },
+               paly1() {
+                   this.$nextTick(() => this.$refs.mmAudio1.play()) // 当前播放歌曲
+               },
+               //修改答题结束的提示图
+               delMaskState:function (index) {
+                  this.maskState[index].state=false;
+               },
+               result:function () {//查看成绩排名
+                   mask.resultScore();
+               },
+               //获取考生用时
+               getUserTime:function (policecode,index) {
+                   var that=this;
+                   var params = {
+                       taskid: this.taskid,
+                       policecode:policecode
+                   }
+                   $.axse(urls + '/ApiInterface/SinglePoliceTask', params, function (result) {
+                       if(result.data[0].AnswerMinute){
+                           that.timeArr[index].time_1=mask.time(result.data[0].AnswerMinute);
+                       }else {
+                           that.getUserTime(policecode,index);
+                       }
+
+
+                   })
+               },
+
+
+           }
+       })
+</script>
+</html>

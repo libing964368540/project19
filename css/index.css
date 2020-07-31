@@ -1,0 +1,360 @@
+@import "public.css";
+#app .content{
+    padding: 50px 30px 0;
+    box-sizing: border-box;
+}
+#app ul.content .list{
+    /*flex-grow:1;*/
+    text-align: center;
+    min-height: 816px;
+    width: 33.33%;
+    box-sizing: border-box;
+}
+#app ul.content li:nth-child(2) .limitwrap{
+    border-left:5px solid rgba(33, 150, 243, 0.6);
+    border-right: 5px solid  rgba(33, 150, 243, 0.6);
+    min-height: 816px;
+}
+
+
+/*头部*/
+.headwrap .nameWrap{
+    text-align: left;
+    padding-left: 25px;
+}
+.headwrap .nameWrap p{
+    color: #787878;
+    font-size: 30px;
+    font-weight: bold;
+    padding-top: 5px;
+    margin-bottom: 10px;
+}
+.headwrap .nameWrap span{
+    color: #101010;
+    font-size: 36px;
+    font-weight: bold;
+}
+.limitwrap{
+    flex-flow: row wrap;
+    align-content: flex-start;
+    padding: 21px;
+}
+.limitwrap.chooseWrap{
+    padding: 0;
+}
+#app .limitwrap .limitImg {
+    margin: 29.5px 0 0;
+    border:5.5px solid #ffffff;
+    flex: 0 0 8%;
+    height: 0;
+    padding-bottom: 8%;
+    /*overflow: hidden;*/
+    border-radius: 50%;
+    /*box-sizing: border-box;*/
+    position: relative;
+}
+#app .limitwrap .CriminalHead{
+    position: absolute;
+    left:0;
+    top:0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 50%;
+}
+#app .limitwrap .limitImg img{
+    position: absolute;
+    left:0;
+    top:0;
+    width: 100%;
+    min-height: 100%;
+}
+#app .limitwrap .limitImg .CriminalCode{
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    color: #101010;
+    font-size: 14px;
+    /*background: #bbbbbb;*/
+    z-index: 1000000;
+}
+#app .limitwrap .choose {
+    margin: 10px 0 10px;
+    flex: 0 0 35%;
+    /*overflow: hidden;*/
+    /*box-sizing: border-box;*/
+    font-size: 0;
+    position: relative;
+    border: 6px solid #ffffff;
+    /*min-height: 60px;*/
+}
+
+#app .limitwrap .choose img{
+    width: 100%;
+    height: 100%;
+}
+#app .limitwrap .chooseList{
+    /*margin-bottom: 20px;*/
+}
+#app .limitwrap .point{
+    margin-right: 0.37rem;color: #2196F3;font-size: 20px;!important;
+}
+#app .limitwrap .chooseNumber{
+    display:block;width: 100%;height: 20px;background: #ECECEC;text-align: center;color: #e51c23;font-size: 14px;width: 100%;line-height: 20px;
+}
+#app .limitwrap .record{
+    font-size: 14px;
+    margin-left: 5px;
+    width: 75px;
+}
+#app .limitwrap .maskState{
+    position: absolute;width: 100%;background:#ffffff;left: 0;
+    top: 55px;bottom:0;
+}
+#app .limitwrap .maskState img{
+    position: absolute;top:0;bottom:0;left:0;right:0;margin:auto;width: 90%;
+}
+.success{
+    border: 6px solid #70BE70!important;
+    /*-moz-box-shadow:0px 0px 15px #70BE70;*/
+    /*-webkit-box-shadow:0px 0px 15px #70BE70;*/
+    /*box-shadow:0px 0px 15px #70BE70;*/
+}
+.fail {
+    border: 6px solid #ff0000!important;
+
+    /*-moz-box-shadow:0px 0px 15px #ff0000;*/
+    /*-webkit-box-shadow:0px 0px 15px #ff0000;*/
+    /*box-shadow:0px 0px 15px #ff0000;*/
+}
+.translate{
+    border: 5.5px solid #0acc57!important;
+    /*-moz-box-shadow:0px 0px 15px red;*/
+    /*-webkit-box-shadow:0px 0px 15px red;*/
+    /*box-shadow:0px 0px 15px red;*/
+}
+.Score{
+    color: #e51c23;
+    font-size: 36px;
+    font-weight: 800;
+}
+.userTime{
+    font-size: 36px;
+    color: #FF9800;
+    font-weight: 800;
+    margin-left: 37px;
+}
+.tips{
+    width: 100%;
+    line-height: 816px;
+    text-align: center;
+    font-size: 36px;
+    color: #2196F3;
+    opacity: 0.3;
+    font-weight: bold;
+}
+.tips.active{
+    opacity: 1;
+}
+.Arrow{
+    position: absolute;
+    right: 20%;
+    top:8%;
+    width: 50px;
+    height: 50px;
+    /*background: #2196F3;*/
+    color: #2196F3;
+    font-size: 30px!important;
+}
+#app .limitwrap .limitImg.cell{
+    border:5.5px solid #11f801!important;
+    transition: 1s 0.5s border ease;
+}
+#resultScore{
+    display: block;
+    position: absolute;
+    top:30px;
+    right: 60px;
+    background: #2196F3;
+    color: #ffffff;
+    width: 100px;
+    border-radius: 4px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    cursor: pointer;
+}
+/*进度指示动画    开始*/
+@keyframes scaleDraw {  /*定义关键帧、scaleDrew是需要绑定到选择器的关键帧名称*/
+    /*0%{*/
+
+        /*transform:  scale(1)  rotate(180deg);  !*开始为原始大小*!*/
+    /*}*/
+    /*25%{*/
+        /*transform: scale(1.2); !*放大1.1倍*!*/
+    /*}*/
+    /*50%{*/
+        /*transform: scale(1) rotate(180deg);*/
+    /*}*/
+    /*75%{*/
+        /*transform: scale(1.2) rotate(180deg);*/
+    /*}*/
+    0%{
+        transform:  scale(1) rotate(180deg)
+    }
+    100%{
+        transform:  scale(1.2) rotate(180deg)
+    }
+}
+.ballon{
+    transform: rotate(90deg);
+    -webkit-animation-name: scaleDraw; /*关键帧名称*/
+    -webkit-animation-timing-function: ease-in-out; /*动画的速度曲线*/
+    -webkit-animation-iteration-count: infinite;  /*动画播放的次数*/
+    -webkit-animation-duration: 1s; /*动画所花费的时间*/
+}
+/*进度指示动画    结束*/
+/*弹框样式            开始*/
+body .msgStyle{
+    padding-top: 0!important;
+    padding-bottom: 0!important;
+    background: #ffffff;
+    color: #000000;
+    opacity: 0.87;
+    border: none;
+    -moz-box-shadow:0px 10px 20px #aaaaaa;
+    -webkit-box-shadow:0px 10px 20px #aaaaaa;
+    box-shadow:0px 10px 20px #aaaaaa;
+    padding-left: 30px;
+    text-align: center;
+    min-width: 100px;
+    height: 50px;
+    line-height: 50px;
+    padding-right: 30px;
+    opacity: 1;
+}
+body .msgStyle .layui-layer-content{
+    padding: 0;
+    height: 50px;
+    line-height: 50px;
+    position: relative;
+    font-weight: bold;
+    font-size: 20px;
+}
+body .msgStyle .msgIconStyle,body .msgStyle .msgIconStyleFail{
+    color:#05D01C;
+    position: absolute;
+    left: 0px;
+    top:14px;
+}
+body .msgStyle .msgIconStyleFail{
+    color:#FF4747;
+}
+/*考题详情弹框*/
+body .lookResult .msgWrap{
+    padding:30px 76px 30px;color:#000000;opacity:0.87;position:relative;padding-bottom: 27px;
+}
+body .lookResult .closeBtn{
+    font-size: 20px!important;color: #000000;position: absolute;top:14px;right: 14px;font-weight: bold;cursor: pointer
+}
+body .lookResult .imgWrap{
+    width: 250px;height:auto;text-align: center;margin:0 auto;margin-bottom: 50px;
+    min-height: 250px;
+    background: #f3f5f8;
+
+}
+body .lookResultS{
+    background: #FF695E;
+    padding:130px 25px 25px;
+    border-radius: 20px;
+}
+body .lookResultS .layui-layer-content{
+    height: 780px!important;
+    background: #ffffff;
+    overflow: visible;
+    border-radius: 4px;
+}
+body .lookResultS .layui-layer-content .headSrc{
+    position: absolute;
+    left: 0;
+    top: -130px;
+    width: 100%;
+    height: 130px;
+    overflow: hidden;
+}
+body .lookResultS .layui-layer-content .headSrc .linkIcon{
+    position: absolute;
+    right: 0;
+    top:20px;
+    color: #ffffff;
+    margin: 0;
+    cursor: pointer;
+}
+body .lookResultS .layui-layer-content .headSrc img{
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 30%;
+    top: -65px;
+}
+body .lookResultS .msgWrap2{
+   color:#000000;position:relative;
+    background: #ffffff;
+}
+body .lookResultS .tableWrap{
+    padding-right: 15px;
+    /*height: 700px;*/
+    /*overflow-y: auto;*/
+}
+body .lookResultS .imgWrap img{
+    width: 100%;
+}
+body .lookResultS{
+    overflow-y: auto;
+}
+body .lookResultS table{
+    width: 33.33%;
+    float: left;
+    margin-top: 20px;
+    padding: 15px 20px;
+    box-sizing: border-box;
+}
+body .lookResultS table caption{
+    font-size: 36px;
+    margin-bottom: 30px;
+    font-weight: 800;
+}
+body .lookResultS tr{
+    width: 100%;
+    height: 40px;
+    font-size: 20px;
+    text-align: center;
+    font-weight:bold;
+}
+body .lookResultS td,body .lookResult tr th{
+    width: 20%;
+    text-align: center;
+    line-height: 35px;
+    color: #101010;
+}
+body .lookResultS tr td:nth-child(1),body .lookResult tr th:nth-child(1){
+    width: 10%;
+}
+body .lookResultS tr td:nth-child(3),body .lookResult tr th:nth-child(1){
+     width: 35%;
+ }
+body .lookResultS tr td:nth-child(4),body .lookResult tr th:nth-child(1){
+    width: 15%;
+}
+body .lookResultS ul{height: 300px;overflow-y: auto;padding-bottom: 20px}
+body .lookResultS ul li{margin-bottom: 18px;color:#259B24}
+body .lookResultS ul li span{
+    width: 120px;
+}
+body .lookResultS ul li.error span,body .lookResultS ul li.error p{color:#E51C23}
+/*弹框样式            结束*/
+
+
+
